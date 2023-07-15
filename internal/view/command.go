@@ -115,6 +115,12 @@ func (c *Command) run(cmd, path string, clearStack bool) error {
 	}
 	cmds := strings.Split(cmd, " ")
 	command := strings.ToLower(cmds[0])
+	if len(cmds) == 2 && isNamespaceCmd(command) {
+		// don't change views if a namespace argument is passed
+		cmds[0] = c.app.Config.ActiveView()
+		command = cmds[0]
+		cmd = strings.Join(cmds, " ")
+	}
 	gvr, v, err := c.viewMetaFor(command)
 	if err != nil {
 		return err
@@ -172,6 +178,10 @@ func (c *Command) defaultCmd() error {
 
 func isContextCmd(c string) bool {
 	return c == "ctx" || c == "context"
+}
+
+func isNamespaceCmd(c string) bool {
+	return c == "ns" || c == "namespace" || c == "namespaces"
 }
 
 func (c *Command) specialCmd(cmd, path string) bool {
