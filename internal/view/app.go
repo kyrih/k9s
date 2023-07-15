@@ -157,12 +157,28 @@ func (a *App) suggestCommand() model.SuggestionFunc {
 		}
 
 		s = strings.ToLower(s)
-		for _, k := range a.command.alias.Aliases.Keys() {
-			if k == s {
-				continue
+		cmd, args, found := strings.Cut(s, " ")
+		if !found {
+			for _, k := range a.command.alias.Aliases.Keys() {
+				if k == s {
+					continue
+				}
+				if strings.HasPrefix(k, s) {
+					entries = append(entries, strings.Replace(k, s, "", 1))
+				}
 			}
-			if strings.HasPrefix(k, s) {
-				entries = append(entries, strings.Replace(k, s, "", 1))
+		} else if isNamespaceCmd(cmd) {
+			nss, err := a.factory.Client().ValidNamespaces()
+			if err == nil {
+				for _, ns := range nss {
+					n := strings.ToLower(ns.Name)
+					if n == args {
+						continue
+					}
+					if strings.HasPrefix(n, args) {
+						entries = append(entries, strings.Replace(n, args, "", 1))
+					}
+				}
 			}
 		}
 		if len(entries) == 0 {
